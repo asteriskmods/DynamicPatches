@@ -12,8 +12,8 @@ buildscript {
 apply plugin: "net.minecraftforge.gradle.forge"
 
 version = "1.0.0"
-group = "com.github.rz7d.mymod"
-archivesBaseName = "mymod"
+group = "com.github.asteriskmods.modname"
+archivesBaseName = "modname"
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
