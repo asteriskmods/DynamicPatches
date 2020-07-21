@@ -3,7 +3,6 @@ package com.github.asteriskmods.dynamicpatches.core;
 import com.github.asteriskmods.dynamicpatches.core.patches.Patch;
 import com.github.asteriskmods.dynamicpatches.core.patches.PatchIC2exAPIRework;
 import com.google.common.collect.ImmutableMap;
-import ic2.api.upgrade.IProcessingUpgrade;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
