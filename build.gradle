@@ -2,31 +2,94 @@ buildscript {
     repositories {
         mavenLocal()
         mavenCentral()
+        jcenter()
         maven { url = "http://files.minecraftforge.net/maven" }
+        maven { url "http://repo.spongepowered.org/maven" }
     }
     dependencies {
+        classpath "com.github.jengelman.gradle.plugins:shadow:4.0.4"
         classpath "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
+        classpath "org.spongepowered:mixingradle:0.6-SNAPSHOT"
     }
 }
 
+apply plugin: "java"
+apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: "net.minecraftforge.gradle.forge"
+apply plugin: "org.spongepowered.mixin"
 
 version = "1.0.0"
-group = "com.github.asteriskmods.modname"
-archivesBaseName = "modname"
+group = "com.github.asteriskmods.dynamicpatches"
+archivesBaseName = "DynamicPatches-1.12.2"
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
+
+configurations {
+    shade
+    compile.extendsFrom(shade)
+}
 
 minecraft {
     version = "1.12.2-14.23.5.2837"
     runDir = "run"
     mappings = "snapshot_20180814"
+
+    def args = [
+        "-Dfml.coreMods.load=com.github.asteriskmods.dynamicpatches.core.PatcherCorePlugin",
+        "-Dmixin.hotSwap=true",
+        "-Dmixin.checks.interfaces=true",
+        "-Dmixin.debug.export=true"
+    ]
+    clientJvmArgs.addAll(args)
+    serverJvmArgs.addAll(args)
+}
+
+mixin {
+    add sourceSets.main, "mixins.vanillafix.refmap.json"
+}
+
+reobf {
+    shadowJar {
+        mappingType = "SEARGE"
+    }
+}
+
+shadowJar {
+    classifier ""
+    exclude "LICENSE.txt", "README", "README.txt", "README.md", "dummyThing"
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
+    maven { url "http://repo.spongepowered.org/maven" }
+    maven { url "http://maven.ic2.player.to" }
+}
+
+dependencies {
+    implementation("org.spongepowered:mixin:0.8.1-SNAPSHOT") {
+        exclude module: "asm-commons"
+        exclude module: "asm-tree"
+        exclude module: "launchwrapper"
+        exclude module: "guava"
+        exclude module: "log4j-core"
+        exclude module: "gson"
+        exclude module: "commons-io"
+    }
+    compileOnly "net.industrial-craft:industrialcraft-2:2.8.220-ex112:dev"
+}
+
+jar {
+    configurations.shade.each { dep ->
+        from(project.zipTree(dep)) {
+            exclude "META-INF", "META-INF/**"
+        }
+    }
+    manifest {
+        attributes "FMLCorePluginContainsFMLMod": "*"
+        attributes "FMLCorePlugin": "com.github.asteriskmods.dynamicpatches.core.PatcherCorePlugin"
+    }
 }
 
 processResources {
@@ -36,9 +99,11 @@ processResources {
     from(sourceSets.main.resources.srcDirs) {
         include "mcmod.info"
         expand "version": project.version,
-               "mcversion": project.minecraft.version
+            "mcversion": project.minecraft.version
     }
     from(sourceSets.main.resources.srcDirs) {
         exclude "mcmod.info"
     }
 }
+
+jar.finalizedBy(reobfJar)
